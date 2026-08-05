@@ -9,10 +9,12 @@ catalog = f"ecommerce_{environment}"
 events_table = f"{catalog}.silver.retailrocket_events"
 products_table = f"{catalog}.silver.olist_products"
 customers_table = f"{catalog}.silver.olist_customers"
-item_landing_path = f"/Volumes/{catalog}/landing/raw_files/project_generated/retailrocket_olist_item_bridge/"
-visitor_landing_path = f"/Volumes/{catalog}/landing/raw_files/project_generated/retailrocket_olist_visitor_bridge/"
+
+item_target_table = f"{catalog}.silver.retailrocket_olist_item_bridge"
+visitor_target_table = f"{catalog}.silver.retailrocket_olist_visitor_bridge"
 
 seed = "20260805"
+
 
 # Read distinct non-null identifiers
 events_df = spark.table(events_table)
@@ -136,19 +138,21 @@ assert visitor_result["distinct_visitor_count"] == visitor_mapping_count
 assert visitor_result["distinct_customer_count"] == visitor_mapping_count
 
 
-# Write bridge datasets
+# Write bridge tables
 (
     item_bridge_df.write
+    .format("delta")
     .mode("overwrite")
-    .option("header", "true")
-    .csv(item_landing_path)
+    .option("overwriteSchema", "true")
+    .saveAsTable(item_target_table)
 )
 
 (
     visitor_bridge_df.write
+    .format("delta")
     .mode("overwrite")
-    .option("header", "true")
-    .csv(visitor_landing_path)
+    .option("overwriteSchema", "true")
+    .saveAsTable(visitor_target_table)
 )
 
 
@@ -159,7 +163,7 @@ print("Eligible Olist products:", product_count)
 print("Mapped rows:", item_mapping_count)
 print("Unmatched Retailrocket items:", item_count - item_mapping_count)
 print("Unmatched Olist products:", product_count - item_mapping_count)
-print("Output path:", item_landing_path)
+print("Target table:", item_target_table)
 print()
 print("Visitor-customer bridge")
 print("Eligible Retailrocket visitors:", visitor_count)
@@ -167,4 +171,4 @@ print("Eligible Olist customers:", customer_count)
 print("Mapped rows:", visitor_mapping_count)
 print("Unmatched Retailrocket visitors:", visitor_count - visitor_mapping_count)
 print("Unmatched Olist customers:", customer_count - visitor_mapping_count)
-print("Output path:", visitor_landing_path)
+print("Target table:", visitor_target_table)
