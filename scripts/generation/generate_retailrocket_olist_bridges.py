@@ -1,9 +1,18 @@
+import sys
+
 from pyspark.sql.functions import col, concat, count, countDistinct, lit, row_number, sha2
 from pyspark.sql.window import Window
 
 
 # Setup
-environment = "dev"
+if len(sys.argv) != 2:
+    raise ValueError("Expected exactly one positional argument: environment")
+
+environment = sys.argv[1].strip().lower()
+
+if environment not in ("dev", "test", "prod"):
+    raise ValueError("environment must be one of: dev, test, prod")
+
 catalog = f"ecommerce_{environment}"
 
 events_table = f"{catalog}.silver.retailrocket_events"

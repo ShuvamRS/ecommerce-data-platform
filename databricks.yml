@@ -1,0 +1,10 @@
+bundle:
+  name: unified_ecommerce_data_platform
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    default: true
+    mode: development
