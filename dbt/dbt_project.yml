@@ -1,0 +1,10 @@
+name: 'unified_ecommerce_data_platform'
+version: '1.0.0'
+
+profile: 'unified_ecommerce_data_platform'
+
+model-paths: ["models"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
