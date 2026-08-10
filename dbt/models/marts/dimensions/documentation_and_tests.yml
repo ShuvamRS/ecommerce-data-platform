@@ -1,0 +1,148 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: One row per customer identified by customer_unique_id.
+    columns:
+      - name: customer_key
+        description: Deterministic warehouse key for the customer.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_unique_id
+        description: Stable Olist customer identifier across orders.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: dim_location
+    description: One row per normalized customer or seller location identified by zip_code_prefix, city, and state.
+    columns:
+      - name: location_key
+        description: Deterministic warehouse key for the location.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: zip_code_prefix
+        description: ZIP code prefix associated with the location.
+        data_tests:
+          - not_null
+
+      - name: city
+        description: Normalized city name.
+        data_tests:
+          - not_null
+
+      - name: state
+        description: Normalized Brazilian state code.
+        data_tests:
+          - not_null
+
+      - name: representative_latitude
+        description: Median latitude from matching geolocation observations; null when the location is unresolved.
+
+      - name: representative_longitude
+        description: Median longitude from matching geolocation observations; null when the location is unresolved.
+
+  - name: dim_product
+    description: One row per product identified by product_id.
+    columns:
+      - name: product_key
+        description: Deterministic warehouse key for the product.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: product_id
+        description: Olist product identifier.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: product_category_name_portuguese
+        description: Product category name in Portuguese.
+
+      - name: product_category_name_english
+        description: Product category name in English.
+
+      - name: product_name_length
+        description: Length of the product name.
+
+      - name: product_description_length
+        description: Length of the product description.
+
+      - name: product_photo_count
+        description: Number of product photos.
+
+      - name: product_weight_g
+        description: Product weight in grams.
+
+      - name: product_length_cm
+        description: Product length in centimeters.
+
+      - name: product_height_cm
+        description: Product height in centimeters.
+
+      - name: product_width_cm
+        description: Product width in centimeters.
+ 
+  - name: dim_seller
+    description: One row per seller found in olist_sellers and olist_closed_deals.
+    columns:
+      - name: seller_key
+        description: Deterministic warehouse key for the seller.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: seller_id
+        description: Olist seller identifier.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: seller_location_key
+        description: Location key for sellers found in olist_sellers; null for sellers found only in olist_closed_deals.
+        data_tests:
+          - relationships:
+                arguments:
+                  to: ref('dim_location')
+                  field: location_key
+                
+  - name: dim_date
+    description: One row per calendar date from the earliest to latest relevant business date in the source data.
+    columns:
+      - name: date_key
+        description: Integer date key in YYYYMMDD format.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: calendar_date
+        description: Calendar date.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: year
+        description: Calendar year.
+
+      - name: quarter
+        description: Calendar quarter number.
+
+      - name: month
+        description: Calendar month number.
+
+      - name: month_name
+        description: Calendar month name.
+
+      - name: day
+        description: Day of the month.
+
+      - name: day_of_week
+        description: Day of week number where 1 is Sunday and 7 is Saturday.
+
+      - name: day_name
+        description: Day of week name.
