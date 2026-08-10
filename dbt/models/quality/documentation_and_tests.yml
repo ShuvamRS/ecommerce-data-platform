@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: location_standardization_issues
+    description: Locations from dim_location that could not be matched to the Olist geolocation data.
+    columns:
+      - name: location_key
+        description: Warehouse key for the unresolved location.
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: location_key
+
+      - name: zip_code_prefix
+        description: ZIP code prefix for the unresolved location.
+        data_tests:
+          - not_null
+
+      - name: city
+        description: Normalized city name for the unresolved location.
+        data_tests:
+          - not_null
+
+      - name: state
+        description: Normalized Brazilian state code for the unresolved location.
+        data_tests:
+          - not_null
+
+      - name: issue_description
+        description: Reason the location could not be matched to the Olist geolocation data.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - city does not match.
+                  - state does not match.
+                  - zip_code_prefix not found.

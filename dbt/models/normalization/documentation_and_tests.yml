@@ -1,0 +1,75 @@
+version: 2
+
+models:
+  - name: olist_geolocation_normalized
+    description: Olist geolocation data with normalized city and state values used for location matching.
+    columns:
+      - name: geolocation_zip_code_prefix
+        description: ZIP code prefix from the Olist geolocation data.
+        data_tests:
+          - not_null
+
+      - name: normalized_city
+        description: Normalized city name used for location matching.
+        data_tests:
+          - not_null
+
+      - name: normalized_state
+        description: Normalized Brazilian state code used for location matching.
+        data_tests:
+          - not_null
+
+      - name: geolocation_lat
+        description: Latitude from the Olist geolocation data.
+
+      - name: geolocation_lng
+        description: Longitude from the Olist geolocation data.
+
+  - name: olist_customers_normalized
+    description: Olist customer data with normalized city and state values used for location matching.
+    columns:
+      - name: customer_id
+        description: Olist customer identifier.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_unique_id
+        description: Stable Olist customer identifier across orders.
+        data_tests:
+          - not_null
+
+      - name: customer_zip_code_prefix
+        description: ZIP code prefix associated with the customer.
+
+      - name: normalized_city
+        description: Normalized customer city used for location matching.
+        data_tests:
+          - not_null
+
+      - name: normalized_state
+        description: Normalized Brazilian state code used for location matching.
+        data_tests:
+          - not_null
+
+  - name: olist_sellers_normalized
+    description: Olist seller data with normalized city and state values used for location matching.
+    columns:
+      - name: seller_id
+        description: Olist seller identifier.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: seller_zip_code_prefix
+        description: ZIP code prefix associated with the seller.
+
+      - name: normalized_city
+        description: Normalized seller city used for location matching.
+        data_tests:
+          - not_null
+
+      - name: normalized_state
+        description: Normalized Brazilian state code used for location matching.
+        data_tests:
+          - not_null

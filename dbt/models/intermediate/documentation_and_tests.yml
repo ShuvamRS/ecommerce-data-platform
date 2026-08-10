@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: int_location_coordinates
+    description: One row per normalized geolocation identified by zip_code_prefix, normalized_city, and normalized_state.
+    columns:
+      - name: zip_code_prefix
+        description: ZIP code prefix from the Olist geolocation data.
+        data_tests:
+          - not_null
+
+      - name: normalized_city
+        description: Normalized city name.
+        data_tests:
+          - not_null
+
+      - name: normalized_state
+        description: Normalized Brazilian state code.
+        data_tests:
+          - not_null
+
+      - name: representative_latitude
+        description: Median latitude across geolocation observations for the location.
+
+      - name: representative_longitude
+        description: Median longitude across geolocation observations for the location.
+
+  - name: int_seller_population
+    description: One row per seller_id found in olist_sellers or olist_closed_deals.
+    columns:
+      - name: seller_id
+        description: Olist seller identifier.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_order_context
+    description: One row per Olist order with its customer key and order-specific customer location key.
+    columns:
+      - name: order_id
+        description: Olist order identifier.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_key
+        description: Customer key associated with the order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+
+      - name: customer_location_key
+        description: Location key associated with the customer record used for the order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: location_key
