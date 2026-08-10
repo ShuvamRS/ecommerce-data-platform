@@ -1,0 +1,419 @@
+version: 2
+
+models:
+  - name: fact_orders
+    description: One row per Olist order.
+    columns:
+      - name: order_id
+        description: Source identifier for the order.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: order_status
+        description: Current status of the order.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - approved
+                  - canceled
+                  - created
+                  - delivered
+                  - invoiced
+                  - processing
+                  - shipped
+                  - unavailable
+
+      - name: customer_key
+        description: Customer dimension key associated with the order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+
+      - name: customer_location_key
+        description: Location key associated with the customer record used for the order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: location_key
+
+      - name: order_purchase_date_key
+        description: Date dimension key for the order purchase date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: order_purchase_time
+        description: Time of day when the order was purchased.
+        data_tests:
+          - not_null
+
+      - name: order_approved_date_key
+        description: Date dimension key for the order approval date.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: order_approved_time
+        description: Time of day when the order was approved.
+
+      - name: order_delivered_carrier_date_key
+        description: Date dimension key for the date the order was delivered to the carrier.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: order_delivered_carrier_time
+        description: Time of day when the order was delivered to the carrier.
+
+      - name: order_delivered_customer_date_key
+        description: Date dimension key for the date the order was delivered to the customer.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: order_delivered_customer_time
+        description: Time of day when the order was delivered to the customer.
+
+      - name: order_estimated_delivery_date_key
+        description: Date dimension key for the estimated delivery date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: order_estimated_delivery_time
+        description: Estimated delivery time of day.
+        data_tests:
+          - not_null
+
+  - name: fact_order_items
+    description: One row per item within an Olist order.
+    columns:
+      - name: order_id
+        description: Olist order identifier.
+        data_tests:
+          - not_null
+
+      - name: order_item_sequence_number
+        description: Sequence number identifying the item within the order.
+        data_tests:
+          - not_null
+
+      - name: product_key
+        description: Product dimension key associated with the order item.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+
+      - name: seller_key
+        description: Seller dimension key associated with the order item.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_seller')
+                field: seller_key
+
+      - name: order_purchase_date_key
+        description: Date dimension key for the order purchase date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: order_purchase_time
+        description: Time of day when the order was purchased.
+        data_tests:
+          - not_null
+
+      - name: shipping_limit_date_key
+        description: Date dimension key for the order item shipping limit date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: shipping_limit_time
+        description: Time of day for the order item shipping limit.
+        data_tests:
+          - not_null
+
+      - name: price
+        description: Price of the order item.
+        data_tests:
+          - not_null
+
+      - name: freight_value
+        description: Freight value associated with the order item.
+        data_tests:
+          - not_null
+
+  - name: fact_payments
+    description: One row per payment record within an Olist order.
+    columns:
+      - name: order_id
+        description: Olist order identifier.
+        data_tests:
+          - not_null
+
+      - name: payment_sequence_number
+        description: Sequence number identifying the payment record within the order.
+        data_tests:
+          - not_null
+
+      - name: payment_type
+        description: Payment method used for the payment.
+        data_tests:
+          - not_null
+
+      - name: payment_installment_count
+        description: Number of installments associated with the payment.
+        data_tests:
+          - not_null
+
+      - name: payment_amount
+        description: Amount of the payment.
+        data_tests:
+          - not_null
+
+      - name: order_purchase_date_key
+        description: Date dimension key for the order purchase date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: order_purchase_time
+        description: Time of day when the order was purchased.
+        data_tests:
+          - not_null
+
+  - name: fact_reviews
+    description: One row per review within an Olist order.
+    columns:
+      - name: review_id
+        description: Olist review identifier.
+        data_tests:
+          - not_null
+
+      - name: order_id
+        description: Olist order identifier associated with the review.
+        data_tests:
+          - not_null
+
+      - name: review_score
+        description: Score assigned to the order review.
+        data_tests:
+          - not_null
+
+      - name: review_comment_title
+        description: Optional title provided with the review.
+
+      - name: review_comment_message
+        description: Optional message provided with the review.
+
+      - name: order_purchase_date_key
+        description: Date dimension key for the order purchase date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: review_creation_date_key
+        description: Date dimension key for the review creation date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: review_creation_time
+        description: Time of day when the review was created.
+        data_tests:
+          - not_null
+
+      - name: review_answer_date_key
+        description: Date dimension key for the review answer date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: review_answer_time
+        description: Time of day when the review was answered.
+        data_tests:
+          - not_null
+
+  - name: fact_mql
+    description: One row per Olist marketing qualified lead.
+    columns:
+      - name: marketing_qualified_lead_id
+        description: Olist marketing qualified lead identifier.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: landing_page_id
+        description: Landing page associated with the marketing qualified lead.
+        data_tests:
+          - not_null
+
+      - name: lead_origin
+        description: Origin channel of the marketing qualified lead.
+
+      - name: first_contact_date_key
+        description: Date dimension key for the first contact date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+  - name: fact_closed_deals
+    description: One row per Olist closed deal.
+    columns:
+      - name: marketing_qualified_lead_id
+        description: Marketing qualified lead identifier associated with the closed deal.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: seller_key
+        description: Seller dimension key associated with the closed deal.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_seller')
+                field: seller_key
+
+      - name: sales_development_representative_id
+        description: Sales development representative associated with the deal.
+
+      - name: sales_representative_id
+        description: Sales representative associated with the deal.
+
+      - name: first_contact_date_key
+        description: Date dimension key for the first contact date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: deal_won_date_key
+        description: Date dimension key for the deal won date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: deal_won_time
+        description: Time of day when the deal was won.
+        data_tests:
+          - not_null
+
+      - name: business_segment
+        description: Business segment associated with the closed deal.
+
+      - name: lead_type
+        description: Lead type associated with the closed deal.
+
+      - name: lead_behaviour_profile
+        description: Behaviour profile associated with the lead.
+
+      - name: has_company
+        description: Indicates whether the lead reported having a company.
+
+      - name: has_global_trade_item_number
+        description: Indicates whether the lead reported having a global trade item number.
+
+      - name: average_stock
+        description: Reported average stock level.
+
+      - name: business_type
+        description: Business type associated with the closed deal.
+
+      - name: declared_product_catalog_size
+        description: Reported product catalog size.
+
+      - name: declared_monthly_revenue
+        description: Reported monthly revenue.
+
+  - name: fact_web_events
+    description: One row per Retailrocket web event.
+    columns:
+      - name: visitor_id
+        description: Retailrocket visitor identifier.
+        data_tests:
+          - not_null
+
+      - name: item_id
+        description: Retailrocket item identifier.
+        data_tests:
+          - not_null
+
+      - name: transaction_id
+        description: Transaction identifier when present for the event.
+
+      - name: event_type
+        description: Type of web event.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - view
+                  - addtocart
+                  - transaction
+
+      - name: event_date_key
+        description: Date dimension key for the web event date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: event_time
+        description: Time of day of the web event, including milliseconds.
+        data_tests:
+          - not_null
