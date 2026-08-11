@@ -47,10 +47,6 @@ resources:
           notebook_task:
             notebook_path: ../notebooks/operational/bronze/olist/sellers_bronze.ipynb
             source: WORKSPACE
-        - task_key: bronze_retailrocket_category_tree
-          notebook_task:
-            notebook_path: ../notebooks/operational/bronze/retailrocket/category_tree_bronze.ipynb
-            source: WORKSPACE
         - task_key: bronze_retailrocket_events
           notebook_task:
             notebook_path: ../notebooks/operational/bronze/retailrocket/events_bronze.ipynb
@@ -122,34 +118,55 @@ resources:
           notebook_task:
             notebook_path: ../notebooks/operational/silver/olist/sellers_silver.ipynb
             source: WORKSPACE
-        - task_key: silver_retailrocket_category_tree
-          depends_on:
-            - task_key: bronze_retailrocket_category_tree
-          notebook_task:
-            notebook_path: ../notebooks/operational/silver/retailrocket/category_tree_silver.ipynb
-            source: WORKSPACE
         - task_key: silver_retailrocket_events
           depends_on:
             - task_key: bronze_retailrocket_events
           notebook_task:
             notebook_path: ../notebooks/operational/silver/retailrocket/events_silver.ipynb
             source: WORKSPACE
-        - task_key: generate_retailrocket_olist_bridges
+        - task_key: generate_retailrocket_olist_item_bridge
           depends_on:
             - task_key: silver_retailrocket_events
             - task_key: silver_olist_products
-            - task_key: silver_olist_customers
           spark_python_task:
-            python_file: ../scripts/generation/generate_retailrocket_olist_bridges.py
+            python_file: ../scripts/generate_retailrocket_olist_item_bridge.py
             parameters:
               - "{{job.parameters.environment}}"
           environment_key: Default
+        - task_key: dbt_gold
+          depends_on:
+            - task_key: silver_olist_order_reviews
+            - task_key: generate_retailrocket_olist_item_bridge
+            - task_key: silver_olist_order_payments
+            - task_key: silver_olist_orders
+            - task_key: silver_olist_customers
+            - task_key: silver_olist_order_items
+            - task_key: silver_olist_marketing_qualified_leads
+            - task_key: silver_olist_geolocation
+            - task_key: silver_olist_sellers
+            - task_key: silver_olist_marketing_closed_deals
+          dbt_task:
+            project_directory: ../dbt
+            commands:
+              - dbt build
+            schema: gold
+            warehouse_id: ${var.dbt_warehouse_id}
+            catalog: ecommerce_${bundle.target}
+            source: WORKSPACE
+          environment_key: dbt-default
       parameters:
         - name: environment
           default: dev
       environments:
         - environment_key: Default
           spec:
+            environment_version: "5"
+
+        - environment_key: dbt-default
+          spec:
+            dependencies:
+              - dbt-databricks==1.12.2
+              - dbt-core==1.11.12
             environment_version: "5"
       max_concurrent_runs: 1
       queue:
