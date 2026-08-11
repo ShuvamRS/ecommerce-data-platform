@@ -1,0 +1,172 @@
+version: 2
+
+models:
+  - name: mart_seller_acquisition
+    description: One row per marketing-qualified lead with its optional closed-deal outcome.
+
+    columns:
+      - name: marketing_qualified_lead_id
+        description: Marketing-qualified lead identifier.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: landing_page_id
+        description: Landing page associated with the MQL.
+
+      - name: lead_origin
+        description: Origin associated with the MQL.
+
+      - name: first_contact_date_key
+        description: First-contact date key.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: is_closed_deal
+        description: Whether the MQL has a matching closed deal.
+        data_tests:
+          - not_null
+
+      - name: seller_key
+        description: Seller key for the closed deal.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_seller')
+                field: seller_key
+
+      - name: deal_won_date_key
+        description: Date key when the deal was won.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: days_to_close
+        description: Calendar days from first contact to deal won.
+
+      - name: deal_chronology_valid
+        description: Whether the deal-won date is on or after the first-contact date; null when no closed deal exists.
+
+      - name: sales_development_representative_id
+        description: Sales development representative identifier.
+
+      - name: sales_representative_id
+        description: Sales representative identifier.
+
+      - name: business_segment
+        description: Business segment recorded for the closed deal.
+
+      - name: lead_type
+        description: Lead type recorded for the closed deal.
+
+      - name: lead_behaviour_profile
+        description: Lead behaviour profile recorded for the closed deal.
+
+      - name: has_company
+        description: Company indicator recorded for the closed deal.
+
+      - name: has_global_trade_item_number
+        description: Global trade item number indicator recorded for the closed deal.
+
+      - name: average_stock
+        description: Average stock recorded for the closed deal.
+
+      - name: business_type
+        description: Business type recorded for the closed deal.
+
+      - name: declared_product_catalog_size
+        description: Declared product catalog size.
+
+      - name: declared_monthly_revenue
+        description: Declared monthly revenue.
+
+  - name: mart_order_summary
+    description: One row per Olist order with order, payment, review, and delivery summary information.
+
+    columns:
+      - name: order_id
+        description: Olist order identifier.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_key
+        description: Warehouse key for the customer associated with the order.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+
+      - name: customer_location_key
+        description: Location key associated with the customer record used for the order.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: location_key
+
+      - name: order_purchase_date_key
+        description: Purchase date key.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: order_delivered_customer_date_key
+        description: Customer delivery date key.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: order_estimated_delivery_date_key
+        description: Estimated delivery date key.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+  - name: mart_cross_source_product_metrics
+    description: One row per project-mapped Olist product with Retailrocket event counts and Olist product sales summary information.
+
+    columns:
+      - name: product_key
+        description: Warehouse key for the project-mapped Olist product.
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+
+      - name: retailrocket_item_id
+        description: Retailrocket item identifier connected through the project-generated bridge.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: view_event_count
+        description: Number of Retailrocket view events for the project-mapped item.
+
+      - name: addtocart_event_count
+        description: Number of Retailrocket add-to-cart events for the project-mapped item.
+
+      - name: transaction_event_count
+        description: Number of Retailrocket transaction events for the project-mapped item.
+
+      - name: olist_item_count
+        description: Number of Olist order-item records for the project-mapped product.
+
+      - name: total_item_price
+        description: Total item price for the project-mapped Olist product.
