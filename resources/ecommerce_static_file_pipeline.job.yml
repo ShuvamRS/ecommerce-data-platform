@@ -156,7 +156,7 @@ resources:
           environment_key: dbt-default
       parameters:
         - name: environment
-          default: dev
+          default: ${bundle.target}
       environments:
         - environment_key: Default
           spec:
