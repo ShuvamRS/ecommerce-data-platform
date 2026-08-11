@@ -4,6 +4,12 @@ bundle:
 include:
   - resources/*.yml
 
+variables:
+  dbt_warehouse_id:
+    description: SQL warehouse used by the dbt Gold task.
+    lookup:
+      warehouse: "Serverless Starter Warehouse"
+
 targets:
   dev:
     default: true
