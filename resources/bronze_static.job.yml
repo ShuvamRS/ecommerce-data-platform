@@ -1,0 +1,60 @@
+resources:
+  jobs:
+    bronze_static:
+      name: bronze_static
+      tasks:
+      - task_key: bronze_olist_customers
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist/customers_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_olist_geolocation
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist/geolocation_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_olist_marketing_closed_deals
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist_marketing/closed_deals_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_olist_marketing_qualified_leads
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist_marketing/marketing_qualified_leads_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_olist_order_items
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist/order_items_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_olist_order_payments
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist/order_payments_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_olist_order_reviews
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist/order_reviews_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_olist_orders
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist/orders_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_olist_product_category_translation
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist/product_category_translation_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_olist_products
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist/products_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_olist_sellers
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/olist/sellers_bronze.ipynb
+          source: WORKSPACE
+      - task_key: bronze_retailrocket_events
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/retailrocket/events_bronze.ipynb
+          source: WORKSPACE
+      parameters:
+      - name: environment
+        default: ${bundle.target}
+      max_concurrent_runs: 1
+      queue:
+        enabled: false
+      performance_target: PERFORMANCE_OPTIMIZED

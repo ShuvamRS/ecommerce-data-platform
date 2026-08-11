@@ -1,0 +1,30 @@
+resources:
+  jobs:
+    ecommerce_platform:
+      name: ecommerce_platform
+      tasks:
+      - task_key: run_bronze_static
+        run_job_task:
+          job_id: ${resources.jobs.bronze_static.id}
+          job_parameters:
+            environment: '{{job.parameters.environment}}'
+      - task_key: run_silver_static
+        depends_on:
+        - task_key: run_bronze_static
+        run_job_task:
+          job_id: ${resources.jobs.silver_static.id}
+          job_parameters:
+            environment: '{{job.parameters.environment}}'
+      - task_key: run_gold
+        depends_on:
+        - task_key: run_silver_static
+        run_job_task:
+          job_id: ${resources.jobs.gold.id}
+          job_parameters:
+            environment: '{{job.parameters.environment}}'
+      parameters:
+      - name: environment
+        default: ${bundle.target}
+      max_concurrent_runs: 1
+      queue:
+        enabled: false

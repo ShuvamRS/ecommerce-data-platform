@@ -1,0 +1,29 @@
+resources:
+  jobs:
+    gold:
+      name: gold
+      tasks:
+      - task_key: dbt_gold
+        dbt_task:
+          project_directory: ../dbt
+          commands:
+          - dbt build
+          schema: gold
+          warehouse_id: ${var.dbt_warehouse_id}
+          catalog: ecommerce_${bundle.target}
+          source: WORKSPACE
+        environment_key: dbt-default
+      parameters:
+      - name: environment
+        default: ${bundle.target}
+      environments:
+      - environment_key: dbt-default
+        spec:
+          dependencies:
+          - dbt-databricks==1.12.2
+          - dbt-core==1.11.12
+          environment_version: '5'
+      max_concurrent_runs: 1
+      queue:
+        enabled: false
+      performance_target: PERFORMANCE_OPTIMIZED
