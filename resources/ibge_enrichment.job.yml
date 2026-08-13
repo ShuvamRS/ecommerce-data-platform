@@ -1,0 +1,34 @@
+resources:
+  jobs:
+    ibge_enrichment:
+      name: ibge_enrichment
+      tasks:
+      - task_key: ibge_municipalities_bronze
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/api/municipalities_bronze.ipynb
+          source: WORKSPACE
+      - task_key: ibge_municipalities_silver
+        depends_on:
+        - task_key: ibge_municipalities_bronze
+        notebook_task:
+          notebook_path: ../notebooks/operational/silver/api/municipalities_silver.ipynb
+          source: WORKSPACE
+      - task_key: ibge_municipality_population_bronze
+        depends_on:
+        - task_key: ibge_municipalities_bronze
+        notebook_task:
+          notebook_path: ../notebooks/operational/bronze/api/municipality_population_bronze.ipynb
+          source: WORKSPACE
+      - task_key: ibge_municipality_population_silver
+        depends_on:
+        - task_key: ibge_municipality_population_bronze
+        notebook_task:
+          notebook_path: ../notebooks/operational/silver/api/municipality_population_silver.ipynb
+          source: WORKSPACE
+      parameters:
+      - name: environment
+        default: ${bundle.target}
+      max_concurrent_runs: 1
+      queue:
+        enabled: false
+      performance_target: PERFORMANCE_OPTIMIZED
