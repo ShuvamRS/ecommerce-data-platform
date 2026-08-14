@@ -46,6 +46,14 @@ models:
       - name: representative_longitude
         description: Median longitude from matching geolocation observations; null when the location is unresolved.
 
+      - name: municipality_key
+        description: Municipality dimension key.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_municipality')
+                field: municipality_key
+
   - name: dim_product
     description: One row per product identified by product_id.
     columns:
@@ -146,3 +154,28 @@ models:
 
       - name: day_name
         description: Day of week name.
+
+  - name: dim_municipality
+    description: Official IBGE municipalities.
+    columns:
+      - name: municipality_key
+        description: Municipality dimension key.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: ibge_municipality_id
+        description: Official IBGE municipality ID.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: municipality_name
+        description: Municipality name.
+        data_tests:
+          - not_null
+
+      - name: state_code
+        description: Brazilian state code.
+        data_tests:
+          - not_null

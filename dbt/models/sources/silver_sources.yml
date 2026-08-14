@@ -17,3 +17,5 @@ sources:
       - name: olist_sellers
       - name: retailrocket_events
       - name: retailrocket_olist_item_bridge
+      - name: ibge_municipalities
+      - name: ibge_municipality_population
