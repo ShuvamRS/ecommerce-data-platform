@@ -15,9 +15,13 @@ targets:
     default: true
     mode: development
 
-  test: {}
+  test:
+    run_as:
+      service_principal_name: d82a2f35-da74-4f48-bec0-767466060d57
 
   prod:
     mode: production
     workspace:
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    run_as:
+      service_principal_name: d82a2f35-da74-4f48-bec0-767466060d57
