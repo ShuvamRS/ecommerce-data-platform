@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dbt
+        run: python -m pip install dbt-core==1.11.12 dbt-databricks==1.12.2
+
+      - name: Create dbt CI profile
+        run: |
+          cat > "$RUNNER_TEMP/profiles.yml" <<'YAML'
+          unified_ecommerce_data_platform:
+            target: ci
+            outputs:
+              ci:
+                type: databricks
+                host: "<HOST>"
+                http_path: "<HTTP_PATH>"
+                token: "<TOKEN>"
+                schema: "<SCHEMA>"
+          YAML
+
+      - name: Parse dbt project
+        working-directory: dbt
+        run: dbt parse --profiles-dir "$RUNNER_TEMP"
+
+      - name: Log in to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Set up Databricks CLI
+        uses: databricks/setup-cli@v1.12.1
+
+      - name: Validate Databricks bundle
+        env:
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+        run: databricks bundle validate -t dev
