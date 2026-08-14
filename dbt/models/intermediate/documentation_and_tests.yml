@@ -60,3 +60,19 @@ models:
               arguments:
                 to: ref('dim_location')
                 field: location_key
+
+  - name: int_location_municipality
+    description: Maps Olist city/state combinations to IBGE municipalities.
+    columns:
+      - name: normalized_city
+        description: Normalized Olist city.
+        data_tests:
+          - not_null
+
+      - name: normalized_state
+        description: Normalized Olist state.
+        data_tests:
+          - not_null
+
+      - name: ibge_municipality_id
+        description: Matched IBGE municipality ID.

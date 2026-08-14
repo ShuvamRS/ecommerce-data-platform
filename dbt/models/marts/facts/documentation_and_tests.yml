@@ -417,3 +417,25 @@ models:
         description: Time of day of the web event, including milliseconds.
         data_tests:
           - not_null
+
+  - name: fact_municipality_population
+    description: Annual municipality population.
+    columns:
+      - name: municipality_key
+        description: Municipality dimension key.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_municipality')
+                field: municipality_key
+
+      - name: population_year
+        description: Population year.
+        data_tests:
+          - not_null
+
+      - name: population
+        description: Population estimate.
+        data_tests:
+          - not_null
