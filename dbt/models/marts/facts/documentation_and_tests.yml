@@ -390,6 +390,14 @@ models:
         data_tests:
           - not_null
 
+      - name: product_key
+        description: Mapped Olist product key when available.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+
       - name: transaction_id
         description: Transaction identifier when present for the event.
 

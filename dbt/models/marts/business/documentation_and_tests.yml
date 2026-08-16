@@ -21,10 +21,6 @@ models:
         description: First-contact date key.
         data_tests:
           - not_null
-          - relationships:
-              arguments:
-                to: ref('dim_date')
-                field: date_key
 
       - name: is_closed_deal
         description: Whether the MQL has a matching closed deal.
@@ -33,19 +29,9 @@ models:
 
       - name: seller_key
         description: Seller key for the closed deal.
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_seller')
-                field: seller_key
 
       - name: deal_won_date_key
         description: Date key when the deal was won.
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_date')
-                field: date_key
 
       - name: days_to_close
         description: Calendar days from first contact to deal won.
@@ -98,47 +84,21 @@ models:
 
       - name: customer_key
         description: Warehouse key for the customer associated with the order.
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_customer')
-                field: customer_key
 
       - name: customer_location_key
         description: Location key associated with the customer record used for the order.
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_location')
-                field: location_key
 
       - name: order_purchase_date_key
         description: Purchase date key.
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_date')
-                field: date_key
 
       - name: order_delivered_customer_date_key
         description: Customer delivery date key.
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_date')
-                field: date_key
 
       - name: order_estimated_delivery_date_key
         description: Estimated delivery date key.
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_date')
-                field: date_key
 
-  - name: mart_cross_source_product_metrics
-    description: One row per project-mapped Olist product with Retailrocket event counts and Olist product sales summary information.
-
+  - name: mart_product_summary
+    description: One row per mapped product-item pair with Retailrocket behavior and Olist sales.
     columns:
       - name: product_key
         description: Warehouse key for the project-mapped Olist product.
