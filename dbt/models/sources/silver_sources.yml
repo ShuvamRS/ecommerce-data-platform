@@ -17,5 +17,12 @@ sources:
       - name: olist_sellers
       - name: retailrocket_events
       - name: retailrocket_olist_item_bridge
+        columns:
+          - name: retailrocket_item_id
+            data_tests:
+              - unique
+          - name: olist_product_id
+            data_tests:
+              - unique
       - name: ibge_municipalities
       - name: ibge_municipality_population
