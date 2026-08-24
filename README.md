@@ -1,173 +1,205 @@
-# Unified Ecommerce Data Platform
+# Ecommerce Data Platform
 
-This project brings Olist ecommerce and marketing data, Retailrocket product events, and IBGE municipality data into one Azure Databricks lakehouse.
+This project integrates Olist ecommerce and marketing data with IBGE municipality and population data in an Azure Databricks lakehouse.
 
-The data moves through Bronze and Silver before dbt builds the Gold dimensions, facts, and marts used for analytics. The repository also includes API ingestion, data quality checks, separate dev/test/prod environments, and GitHub Actions for CI/CD.
+Batch files land in Azure Data Lake Storage Gen2 and are ingested incrementally with Databricks Auto Loader. PySpark handles Bronze and Silver processing, dbt builds the analytical Gold layer, and Databricks Jobs and Asset Bundles deploy the same workloads across dev, test, and prod. Power BI consumes selected Gold models through the Databricks SQL Warehouse.
+
+**Technology:** Azure Databricks · Azure Data Lake Storage Gen2 · PySpark · Spark SQL · Delta Lake · Unity Catalog · Databricks Auto Loader · dbt Core · Databricks Jobs · Databricks Asset Bundles · GitHub Actions · Power BI
 
 ## Architecture
 
-```text
-                           UNIFIED ECOMMERCE DATA PLATFORM
+```mermaid
+flowchart TB
+    OE["Olist Ecommerce<br/>9 CSV datasets"]
+    OM["Olist Marketing Funnel<br/>2 CSV datasets"]
+    IL["IBGE Localidades API"]
+    IP["IBGE SIDRA Population API"]
 
-        Olist Marketing                Olist Ecommerce                 Retailrocket
-              CSVs                           CSVs                         Events
-                \                              |                            /
-                 \                             |                           /
-                  +----------------------------+--------------------------+
-                                               |
-                                               v
-                                Unity Catalog Landing Volume
-                                               |
-                                               v
-                                      Databricks Auto Loader
-                                               |
-                                               v
-          IBGE Localidades API ------> Bronze Delta Tables <------ IBGE SIDRA Population API
-                                               |
-                                               v
-                                        Silver Delta Tables
-                                               |
-                +------------------------------+------------------------------+
-                |                                                             |
-                |               Item-Product Bridge (Retailrocket / Olist)    |
-                |                                                             |
-                |                                                             |
-                +------------------------------+------------------------------+
-                                               |
-                                               v
-                                            dbt Gold
-                                               |
-             +---------------------------------+----------------------------------+
-             |                                 |                                  |
-             v                                 v                                  v
-        Dimensions                           Facts                         Business Marts
+    LF["ADLS Gen2<br/>File landing"]
+    LA["Databricks Auto Loader"]
+    LR["ADLS Gen2<br/>Raw API responses"]
+
+    B["Bronze Delta tables"]
+    S["Silver Delta tables"]
+    G["dbt Gold<br/>Dimensions · Facts · Marts"]
+    W["Databricks SQL Warehouse"]
+    P["Power BI Import semantic model"]
+    R["Power BI report"]
+
+    OE --> LF
+    OM --> LF
+    LF --> LA --> B
+
+    IL --> LR
+    IP --> LR
+    LR --> B
+
+    B --> S --> G --> W --> P --> R
 ```
+
+The Databricks data pipeline and the Power BI Import refresh run separately.
 
 ## Data Sources
 
 | Source | Data |
 |---|---|
-| **Olist Ecommerce** | Customers, geolocation, orders, order items, payments, reviews, products, sellers, and product-category translations |
-| **Olist Marketing** | Qualified leads and closed deals |
-| **Retailrocket** | Product views, add-to-cart events, and transaction events |
-| **IBGE** | Municipality reference data and annual municipality population |
+| [Olist Brazilian E-Commerce](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) | Customers, geolocation, orders, order items, payments, reviews, products, sellers, and product-category translations |
+| [Olist Marketing Funnel](https://www.kaggle.com/datasets/olistbr/marketing-funnel-olist) | Marketing-qualified leads and closed deals |
+| [IBGE Localidades API](https://servicodados.ibge.gov.br/api/docs/localidades) | Official municipality reference data |
+| [IBGE SIDRA](https://servicodados.ibge.gov.br/api/docs/agregados?versao=3) | Municipality population estimates |
 
-## Bronze
+## Ingestion and Transformation
 
-Olist, Olist Marketing, and Retailrocket data are ingested with Databricks Auto Loader.
+### Bronze and Silver
 
-Bronze keeps the source fields and adds ingestion metadata such as the source path, ingestion timestamp, and run ID. Auto Loader checkpoints and rescued data are also retained for ingestion and schema handling.
+The 11 Olist ecommerce and marketing datasets use dataset-specific Auto Loader notebooks. Bronze retains source and ingestion metadata, `_rescued_data`, schema-tracking state, and checkpoint state for repeatable incremental ingestion.
 
-IBGE municipality and population responses are stored in Bronze before being cleaned downstream.
+Silver notebooks apply data types, standardization, deduplication where needed, and dataset-specific cleaning before the data is used by dbt.
 
-## Silver
+IBGE Localidades and SIDRA responses are preserved before Bronze processing. Municipality population ingestion derives the required years from Silver orders and requests only years that have not already been loaded.
 
-Silver contains the cleaned and typed datasets used by the rest of the project.
+The repository keeps development notebooks separate from the parameterized operational notebooks used by Databricks Jobs.
 
-Current Silver processing includes:
+### Gold with dbt
 
-- timestamp and data type cleanup
-- product-category translation
-- customer, seller, and geolocation cleanup
-- Retailrocket event preparation
-- IBGE municipality cleanup
-- IBGE population cleanup
-- Retailrocket/Olist item-product mapping
+dbt builds normalization and intermediate models before the final dimensions, facts, marts, and quality model. Location models standardize Olist city/state values and map them to official IBGE municipalities.
 
-## Gold
+| Layer | Models |
+|---|---|
+| Dimensions | `dim_customer`, `dim_date`, `dim_location`, `dim_municipality`, `dim_product`, `dim_seller` |
+| Facts | `fact_orders`, `fact_order_items`, `fact_payments`, `fact_reviews`, `fact_mql`, `fact_closed_deals`, `fact_municipality_population` |
+| Business marts | `mart_order_summary`, `mart_seller_acquisition` |
+| Quality | `location_standardization_issues` |
 
-Gold is built with dbt.
+### dbt Lineage
 
-### Dimensions
+![dbt Gold lineage](screenshots/dbt_dag.png)
 
-- `dim_customer`
-- `dim_date`
-- `dim_location`
-- `dim_municipality`
-- `dim_product`
-- `dim_seller`
+## Pipeline Orchestration
 
-### Facts
+`ecommerce_platform` is the master Databricks Job. It runs `bronze_static`, `silver_static`, `ibge_enrichment`, and `gold` in sequence, while each child job remains independently runnable. Bronze contains 11 ingestion tasks, Silver contains 11 transformation tasks, IBGE enrichment contains four API tasks, and Gold runs `dbt build`.
 
-- `fact_orders`
-- `fact_order_items`
-- `fact_payments`
-- `fact_reviews`
-- `fact_mql`
-- `fact_closed_deals`
-- `fact_web_events`
-- `fact_municipality_population`
+### Master Pipeline
 
-### Business Marts
+<p align="center">
+  <img src="screenshots/ecommerce_platform_run.png" alt="Databricks ecommerce platform run" width="50%">
+</p>
 
-- `mart_order_summary` — order, payment, review, freight, and delivery metrics
-- `mart_seller_acquisition` — qualified leads, closed deals, conversion, and time to close
-- `mart_product_summary` — Retailrocket product activity and Olist sales for mapped products
+### Bronze
 
-### Quality
+<p align="center">
+  <img src="screenshots/bronze_run.png" alt="Databricks Bronze run" width="50%">
+</p>
 
-- `location_standardization_issues`
+### Silver
 
-## IBGE Enrichment
+<p align="center">
+  <img src="screenshots/silver_run.png" alt="Databricks Silver run" width="50%">
+</p>
 
-IBGE municipality data is used to add municipality-level context to Olist locations. Population data is available for 2016, 2017, and 2018.
+### IBGE Enrichment
 
-Current Gold results include:
+<p align="center">
+  <img src="screenshots/ibge_enrichment_run.png" alt="Databricks IBGE enrichment run" width="50%">
+</p>
 
-- 5,571 municipalities in `dim_municipality`
-- 15,235 rows in `dim_location`
-- 16,710 municipality-year rows in `fact_municipality_population`
+### Gold
 
-## Data Quality
-
-dbt tests cover model keys, required fields, relationships, accepted values, selected join checks, and important reconciliations.
-
-Latest full dbt build:
-
-```text
-PASS=186  WARN=0  ERROR=0  SKIP=0
-```
+<p align="center">
+  <img src="screenshots/gold_run.png" alt="Databricks Gold dbt run" width="50%">
+</p>
 
 ## Environments and CI/CD
 
-The Databricks project has separate targets for:
+The Databricks Asset Bundle source-controls the five Job resources and defines separate `dev`, `test`, and `prod` targets. The bundle target is passed into the operational jobs so catalogs, landing paths, and Auto Loader state remain environment-specific.
 
-- `dev`
-- `test`
-- `prod`
+Pull requests run `dbt parse` and DEV bundle validation before merge.
 
-Databricks Asset Bundles are used for deployment configuration.
+| Target | Catalog | Deployment |
+|---|---|---|
+| DEV | `ecommerce_dev` | Pushes to `main` validate and deploy automatically |
+| TEST | `ecommerce_test` | Manual promotion of an approved commit SHA; validates, deploys, and runs `ecommerce_platform` |
+| PROD | `ecommerce_prod` | Manual promotion of an approved commit SHA; validates and deploys without automatically running the production pipeline |
 
-GitHub Actions handles pull request validation, development deployment, and test/production promotion. Authentication uses Microsoft Entra ID and OIDC.
+The current platform release completed full runs in DEV and TEST, and the approved release was deployed to PROD.
+
+## Data Quality
+
+dbt tests cover uniqueness, required fields, relationships, accepted values, fact grain, join fanout, and selected business reconciliations. Location enrichment checks municipality mapping and protects against row multiplication.
+
+The latest full dbt build passed in both DEV and TEST:
+
+```text
+PASS=168  WARN=0  ERROR=0  SKIP=0  NO-OP=0  TOTAL=168
+```
+
+## Power BI Report
+
+Power BI imports selected Gold models through the Databricks SQL Warehouse.
+
+### Executive Overview
+
+![Power BI Executive Overview](screenshots/dashboard_page_1.png)
+
+### Orders & Delivery
+
+![Power BI Orders and Delivery](screenshots/dashboard_page_2.png)
+
+### Product Performance
+
+![Power BI Product Performance](screenshots/dashboard_page_3.png)
+
+### Seller Acquisition
+
+![Power BI Seller Acquisition](screenshots/dashboard_page_4.png)
+
+### Geography & Market Context
+
+![Power BI Geography and Market Context](screenshots/dashboard_page_5.png)
 
 ## Repository Structure
 
 ```text
 .
-├── .github/workflows/   # CI/CD workflows
-├── dbt/                 # Gold models, documentation, and tests
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       ├── cd.yml
+│       └── promote.yml
+├── dbt/
+│   ├── macros/
+│   ├── models/
+│   │   ├── sources/
+│   │   ├── normalization/
+│   │   ├── intermediate/
+│   │   ├── marts/
+│   │   │   ├── dimensions/
+│   │   │   ├── facts/
+│   │   │   └── business/
+│   │   └── quality/
+│   ├── tests/
+│   └── dbt_project.yml
 ├── notebooks/
-│   ├── development/     # Development notebooks
-│   └── operational/     # Bronze and Silver notebooks
-├── resources/           # Databricks resource definitions
-├── scripts/             # Supporting scripts
-└── databricks.yml       # Databricks Asset Bundle configuration
+│   ├── development/
+│   │   ├── bronze/
+│   │   └── silver/
+│   └── operational/
+│       ├── bronze/
+│       └── silver/
+├── resources/
+│   ├── bronze_static.job.yml
+│   ├── silver_static.job.yml
+│   ├── ibge_enrichment.job.yml
+│   ├── gold.job.yml
+│   └── ecommerce_platform.job.yml
+├── screenshots/
+├── databricks.yml
+└── README.md
 ```
 
-## Technologies
+## Dataset
 
-- Azure Databricks
-- PySpark
-- SQL
-- Delta Lake
-- Unity Catalog
-- Databricks Auto Loader
-- dbt Core / dbt-databricks
-- Databricks Asset Bundles
-- GitHub Actions
-- Microsoft Entra ID / OIDC
-- IBGE APIs
-
-## Retailrocket and Olist Product Mapping
-
-Retailrocket and Olist use different product IDs. The Silver layer includes a fixed project-generated mapping so product-level metrics from the two datasets can be compared.
+- [Olist Brazilian E-Commerce](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
+- [Olist Marketing Funnel](https://www.kaggle.com/datasets/olistbr/marketing-funnel-olist)
+- [IBGE Localidades API](https://servicodados.ibge.gov.br/api/docs/localidades)
+- [IBGE SIDRA Population](https://servicodados.ibge.gov.br/api/docs/agregados?versao=3)
