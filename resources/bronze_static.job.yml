@@ -47,10 +47,6 @@ resources:
         notebook_task:
           notebook_path: ../notebooks/operational/bronze/olist/sellers_bronze.ipynb
           source: WORKSPACE
-      - task_key: bronze_retailrocket_events
-        notebook_task:
-          notebook_path: ../notebooks/operational/bronze/retailrocket/events_bronze.ipynb
-          source: WORKSPACE
       parameters:
       - name: environment
         default: ${bundle.target}

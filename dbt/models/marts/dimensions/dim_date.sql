@@ -30,9 +30,6 @@ FROM {{ source('silver', 'olist_marketing_qualified_leads') }}
 UNION ALL
 SELECT TO_DATE(deal_won_date) AS DATE
 FROM {{ source('silver', 'olist_closed_deals') }}
-UNION ALL
-SELECT TO_DATE(timestamp_millis(timestamp)) AS DATE
-FROM {{ source('silver', 'retailrocket_events') }}
 ), generated_dates AS (
     SELECT 
         EXPLODE(

@@ -49,26 +49,9 @@ resources:
         notebook_task:
           notebook_path: ../notebooks/operational/silver/olist/sellers_silver.ipynb
           source: WORKSPACE
-      - task_key: silver_retailrocket_events
-        notebook_task:
-          notebook_path: ../notebooks/operational/silver/retailrocket/events_silver.ipynb
-          source: WORKSPACE
-      - task_key: generate_retailrocket_olist_item_bridge
-        depends_on:
-        - task_key: silver_retailrocket_events
-        - task_key: silver_olist_products
-        spark_python_task:
-          python_file: ../scripts/generate_retailrocket_olist_item_bridge.py
-          parameters:
-          - '{{job.parameters.environment}}'
-        environment_key: Default
       parameters:
       - name: environment
         default: ${bundle.target}
-      environments:
-      - environment_key: Default
-        spec:
-          environment_version: '5'
       max_concurrent_runs: 1
       queue:
         enabled: false
